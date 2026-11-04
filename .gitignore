@@ -2,3 +2,7 @@ node_modules/
 .demo-repos/
 dist/
 .DS_Store
+cli/dist/
+cli/viewer/
+cli/README.md
+cli/LICENSE

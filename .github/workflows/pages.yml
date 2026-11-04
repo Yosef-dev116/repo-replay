@@ -27,6 +27,7 @@ jobs:
       - run: npm ci
       - run: npm test
       - run: npm run lint
+      - run: npm run build:pkg -w cli && cd cli && npm pack --dry-run
       - run: npm run build -w web -- --base=/repo-replay/
       - uses: actions/upload-pages-artifact@v3
         with:

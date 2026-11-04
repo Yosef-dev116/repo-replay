@@ -9,38 +9,30 @@ can follow one file across years of history.
 
 **[Live demo](https://yosef-dev116.github.io/repo-replay/?repo=vue.json)**: pick Vue, zod or htmx and press play.
 
-![Vue's history from 2018 to 2026, one frame per month](docs/vue-replay.gif)
+![Vue's history from 2018 to 2026, one frame per month](https://raw.githubusercontent.com/Yosef-dev116/repo-replay/main/docs/vue-replay.gif)
 
 *Vue (`vuejs/core`), 2018–2026. Red tiles changed a lot that month. Grey tiles did not change.*
 
-## Quick start
-
-You need Node 24 or later and git.
-
-```sh
-npm install
-npm run dev
-```
-
-Open http://localhost:5173. The repo includes data for three demo repos,
-[Vue](https://github.com/vuejs/core), [zod](https://github.com/colinhacks/zod) and [htmx](https://github.com/bigskysoftware/htmx).
-Pick one and press play.
-
 ## Replay your own repo
 
+Run this inside any git repo. You need Node 20 or later.
+
 ```sh
-npm run extract -- path/to/your/clone -o web/public/data/my-repo.json --name you/my-repo
-npm run dev
+npx repo-replay
 ```
 
-The new file shows up in the repo menu. Extraction reads `git log` only. It does not
-check out old versions, so it takes seconds, even for repos with years of history.
+It reads the history, starts a viewer on your own machine, and opens it in your browser.
+Your code and history never leave your computer, so it is safe for private repos.
+A repo with years of history takes a few seconds, because it reads `git log` only.
 
 | Option | Meaning |
 |---|---|
-| `-o <file>` | Output JSON file. Required. |
+| `[path]` | The repo to replay. Default: the current folder. |
+| `-o <file.json>` | Write the data to a file instead of opening the viewer. |
 | `--name owner/repo` | Name shown in the viewer. Default: the folder name. |
 | `--max-months N` | Maximum number of frames. Default: 120. |
+| `--port N` | Port for the viewer. Default: any free port. |
+| `--no-open` | Print the URL, but do not open a browser. |
 
 ## Viewer links
 
@@ -75,15 +67,23 @@ git log --numstat ──► cli/ ──► one JSON file per repo ──► web/
 
 ## Development
 
+Clone the repo, then:
+
 ```sh
+npm install
+npm run dev         # viewer with the demo data at http://localhost:5173
 npm test            # CLI unit tests (Vitest)
 npm run lint        # CLI typecheck + web lint
 npm run build       # production build into web/dist
 npm run demo-data   # rebuild the demo JSON from pinned commits
+npm run extract -- path/to/repo -o web/public/data/my-repo.json   # add a repo to the dev viewer
 ```
 
 `npm run demo-data` clones Vue, zod and htmx into `.demo-repos/` at the commits pinned in
 `scripts/demo-data.sh`. It produces the same files that are committed.
+
+`cli/` is the npm package. `npm pack` in `cli/` bundles the CLI into one file and adds the
+built viewer, so the package has no dependencies.
 
 To host the viewer under a sub-path, such as GitHub Pages, build with
 `npx vite build --base=/repo-replay/` in `web/`.

@@ -1,5 +1,5 @@
 {
-  "name": "repo-replay",
+  "name": "repo-replay-monorepo",
   "private": true,
   "workspaces": ["cli", "web"],
   "scripts": {

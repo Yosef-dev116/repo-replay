@@ -1,13 +1,23 @@
 {
-  "name": "repo-replay-cli",
-  "private": true,
-  "version": "0.0.0",
+  "name": "repo-replay",
+  "version": "0.1.0",
+  "description": "Watch a codebase grow: replay a repo's git history as an animated treemap in your browser",
+  "keywords": ["git", "history", "visualization", "treemap", "cli", "d3"],
+  "license": "MIT",
+  "author": "Yosef Mekonnen",
+  "homepage": "https://yosef-dev116.github.io/repo-replay/?repo=vue.json",
+  "repository": { "type": "git", "url": "git+https://github.com/Yosef-dev116/repo-replay.git", "directory": "cli" },
+  "bugs": "https://github.com/Yosef-dev116/repo-replay/issues",
   "type": "module",
-  "engines": { "node": ">=24" },
+  "bin": { "repo-replay": "dist/repo-replay.js" },
+  "files": ["dist", "viewer"],
+  "engines": { "node": ">=20" },
   "scripts": {
     "extract": "tsx src/index.ts",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "build:pkg": "node scripts/build-pkg.mjs",
+    "prepack": "npm run build:pkg"
   },
   "devDependencies": {
     "@types/node": "^24.19.2",
