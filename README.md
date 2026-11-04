@@ -7,6 +7,8 @@ Each tile is one file. Its area is the file's line count, and its color is how m
 file changed in that period. Files keep their tile when they are renamed or moved, so you
 can follow one file across years of history.
 
+**[Live demo](https://yosef-dev116.github.io/repo-replay/)**: pick zod or htmx and press play.
+
 ![zod in June 2025: the v4 rewrite in packages/zod/src/v4 is red with churn, while v3 is grey](docs/zod.png)
 
 ## Quick start
