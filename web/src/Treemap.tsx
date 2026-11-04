@@ -1,6 +1,6 @@
 import * as d3 from 'd3'
 import { useEffect, useRef, useState } from 'react'
-import type { FileSnap, MonthSnap } from './types'
+import type { FileSnap, MonthSnap } from '../../cli/src/types.ts'
 
 interface Props {
   month: MonthSnap
@@ -8,17 +8,10 @@ interface Props {
   duration: number
 }
 
-interface Box {
-  x0: number
-  y0: number
-  x1: number
-  y1: number
-}
-
 // Folder nodes that stratify creates from paths have no data at run time.
 type Node = d3.HierarchyRectangularNode<FileSnap>
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-type RectSel = d3.Selection<SVGRectElement, Node, any, any> | d3.Transition<SVGRectElement, Node, any, any>
+type RectTransition = d3.Transition<SVGRectElement, Node, any, any>
 
 /** Folders bigger than this share of the total get a label strip. */
 const LABEL_SHARE = 0.04
@@ -45,7 +38,7 @@ function layout(files: FileSnap[], width: number, height: number): Node {
     .round(false)(root)
 }
 
-const mid = (b: Box) => [(b.x0 + b.x1) / 2, (b.y0 + b.y1) / 2]
+const mid = (b: Node) => [(b.x0 + b.x1) / 2, (b.y0 + b.y1) / 2]
 
 export default function Treemap({ month, color, duration }: Props) {
   const svgRef = useRef<SVGSVGElement>(null)
@@ -79,14 +72,13 @@ export default function Treemap({ month, color, duration }: Props) {
     const total = root.value || 1
 
     const sel = d3.select(svg)
-    const place = (s: RectSel) =>
-      (s as d3.Transition<SVGRectElement, Node, SVGGElement, unknown>)
+    const place = (s: RectTransition) =>
+      s
         .attr('x', (d) => d.x0)
         .attr('y', (d) => d.y0)
         .attr('width', (d) => Math.max(0, d.x1 - d.x0))
         .attr('height', (d) => Math.max(0, d.y1 - d.y0))
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const collapse = (s: d3.Transition<SVGRectElement, Node, any, any>) =>
+    const collapse = (s: RectTransition) =>
       s
         .attr('x', function () {
           return +this.getAttribute('x')! + +this.getAttribute('width')! / 2

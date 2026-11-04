@@ -40,7 +40,6 @@ It reads `git log` only, so it is fast. Vue's 8 years of history take about 3 se
 |---|---|
 | `?repo=zod.json` | Open this repo. |
 | `?month=2025-06` | Open at this month. Use it to link to a moment in history. |
-| `?fps` | Show a frames-per-second meter, for checking smoothness. |
 
 ## How it works
 

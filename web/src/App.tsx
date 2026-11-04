@@ -1,15 +1,13 @@
 import * as d3 from 'd3'
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import FpsMeter from './FpsMeter'
 import Treemap from './Treemap'
-import type { RepoJson } from './types'
+import type { RepoJson } from '../../cli/src/types.ts'
 
 const SPEEDS = [0.5, 1, 2] as const
 /** One month per this many ms at 1x. */
 const BASE_STEP_MS = 900
 const TWEEN_MS = 400
 const NEUTRAL = '#2b303b'
-const SHOW_FPS = new URLSearchParams(location.search).has('fps')
 
 const fmt = d3.format(',')
 
@@ -106,7 +104,6 @@ export default function App() {
 
   return (
     <div className="app">
-      {SHOW_FPS && <FpsMeter />}
       <header className="bar">
         <h1>Repo Replay</h1>
         <label className="picker">

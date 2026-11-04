@@ -1,27 +1,7 @@
 import { resolveIdentity } from "./identity.ts";
 import { isIgnored } from "./ignore.ts";
 import type { Commit } from "./git.ts";
-
-export interface FileSnap {
-  id: string;
-  path: string;
-  lines: number; // running added - deleted, never below 0
-  churn: number; // added + deleted since the previous snapshot
-  topAuthor: string; // author with the most churn on this file, all time
-}
-
-export interface MonthSnap {
-  month: string; // YYYY-MM
-  files: FileSnap[];
-  // commits and authors count the period since the previous snapshot.
-  // files and lines describe the tree at the end of the month.
-  stats: { files: number; lines: number; commits: number; authors: number };
-}
-
-export interface RepoJson {
-  repo: string;
-  months: MonthSnap[];
-}
+import type { FileSnap, MonthSnap, RepoJson } from "./types.ts";
 
 /** Run facts that the CLI prints but does not write to the JSON. */
 export interface BuildReport {
