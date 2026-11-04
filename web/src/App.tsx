@@ -1,5 +1,6 @@
 import * as d3 from 'd3'
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import FpsMeter from './FpsMeter'
 import Treemap from './Treemap'
 import type { RepoJson } from './types'
 
@@ -8,6 +9,7 @@ const SPEEDS = [0.5, 1, 2] as const
 const BASE_STEP_MS = 900
 const TWEEN_MS = 400
 const NEUTRAL = '#2b303b'
+const SHOW_FPS = new URLSearchParams(location.search).has('fps')
 
 const fmt = d3.format(',')
 
@@ -58,7 +60,9 @@ export default function App() {
         setData(d)
         setIndex(0)
         setError('')
-        history.replaceState(null, '', `?repo=${encodeURIComponent(file)}`)
+        const q = new URLSearchParams(location.search)
+        q.set('repo', file)
+        history.replaceState(null, '', `?${q}`)
       })
       .catch(() => live && setError(`Could not load ${file}.`))
     return () => {
@@ -100,6 +104,7 @@ export default function App() {
 
   return (
     <div className="app">
+      {SHOW_FPS && <FpsMeter />}
       <header className="bar">
         <h1>Repo Replay</h1>
         <label className="picker">
