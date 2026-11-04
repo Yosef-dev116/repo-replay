@@ -22,6 +22,11 @@ export interface RepoJson {
   months: MonthSnap[];
 }
 
+/** Run facts that are printed by the CLI but not written to repo.json. */
+export interface BuildReport {
+  unknownRenames: number; // renames whose oldPath had no id
+}
+
 interface Live {
   path: string;
   lines: number;
@@ -57,6 +62,7 @@ export async function buildRepoJson(
   repo: string,
   commits: AsyncIterable<Commit>,
   maxMonths = MAX_MONTHS,
+  report: BuildReport = { unknownRenames: 0 },
 ): Promise<RepoJson> {
   const idOf = new Map<string, string>(); // path -> id, live files only
   const live = new Map<string, Live>(); // id -> state
@@ -92,7 +98,12 @@ export async function buildRepoJson(
     authorsInMonth.add(c.author);
 
     for (const f of c.files) {
+      const renamed = f.oldPath !== undefined && f.oldPath !== f.newPath;
+      if (renamed && !idOf.has(f.oldPath!)) report.unknownRenames++;
+      // A rename onto a live path replaces that file: drop its tile.
+      const replaced = renamed ? idOf.get(f.newPath) : undefined;
       const id = resolveIdentity(idOf, f);
+      if (replaced !== undefined && replaced !== id) live.delete(replaced);
       let s = live.get(id);
       if (!s) {
         s = { path: f.newPath, lines: 0, churn: 0, byAuthor: new Map() };

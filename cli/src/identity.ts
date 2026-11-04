@@ -14,15 +14,22 @@
  * gets a new id. The treemap uses the id as the D3 join key, so a reused id
  * would make a dead tile come back to life in the wrong place.
  *
- * Edge cases to decide:
- *   - rename whose oldPath is not in map (history starts mid-rename, or the
- *     old file was created on a branch we did not replay)
- *   - rename onto a path that already has an id
+ * Edge cases (decided by the user):
+ *   - rename whose oldPath is not in map: treat it as an add with a new id.
+ *     The caller counts these cases.
+ *   - rename onto a path that already has an id: the moved id wins, and the
+ *     old id at that path is dropped. The caller removes its tile.
  */
+let next = 0; // never resets, so ids stay unique for the whole process
+
 export function resolveIdentity(
   map: Map<string, string>,
   change: { oldPath?: string; newPath: string },
 ): string {
-  // TODO(user): implement. See the tests in test/identity.test.ts.
-  throw new Error("not implemented");
+  const { oldPath, newPath } = change;
+  let id = oldPath === undefined ? undefined : map.get(oldPath);
+  if (id !== undefined) map.delete(oldPath!); // rename: move the id
+  id ??= map.get(newPath) ?? `f${next++}`; // modify keeps, add gets new
+  map.set(newPath, id); // a moved id overwrites any id at newPath
+  return id;
 }

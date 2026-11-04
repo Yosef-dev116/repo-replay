@@ -64,4 +64,23 @@ describe("resolveIdentity", () => {
     expect(resolveIdentity(map, change)).toBe(id);
     expect(map.get("src/new/x.ts")).toBe(id);
   });
+
+  it("rename from an unknown oldPath is an add with a new id", () => {
+    const map = new Map<string, string>();
+    const other = resolveIdentity(map, { newPath: "z.ts" });
+    const id = resolveIdentity(map, { oldPath: "ghost.ts", newPath: "a.ts" });
+    expect(id).not.toBe(other);
+    expect(map.get("a.ts")).toBe(id);
+    expect(map.has("ghost.ts")).toBe(false);
+  });
+
+  it("rename onto a path that has an id: the moved id wins", () => {
+    const map = new Map<string, string>();
+    const moved = resolveIdentity(map, { newPath: "a.ts" });
+    const old = resolveIdentity(map, { newPath: "b.ts" });
+    expect(resolveIdentity(map, { oldPath: "a.ts", newPath: "b.ts" })).toBe(moved);
+    expect(map.get("b.ts")).toBe(moved);
+    expect([...map.values()]).not.toContain(old);
+    expect(map.size).toBe(1);
+  });
 });
