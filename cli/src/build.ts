@@ -1,4 +1,5 @@
 import { resolveIdentity } from "./identity.ts";
+import { isIgnored } from "./ignore.ts";
 import type { Commit } from "./git.ts";
 
 export interface FileSnap {
@@ -75,6 +76,7 @@ export async function buildRepoJson(
     const files: FileSnap[] = [];
     let lines = 0;
     for (const [id, f] of live) {
+      if (isIgnored(f.path)) continue;
       let topAuthor = "";
       let best = -1;
       for (const [a, n] of f.byAuthor) if (n > best) { best = n; topAuthor = a; }
