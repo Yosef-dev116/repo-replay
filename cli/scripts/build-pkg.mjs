@@ -1,10 +1,11 @@
 // Build the npm package: bundle the CLI into one file and copy in the built viewer.
 import { execFileSync } from "node:child_process";
 import { chmodSync, copyFileSync, rmSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import { build } from "esbuild";
 
-const cli = new URL("../", import.meta.url).pathname;
-const root = new URL("../../", import.meta.url).pathname;
+const cli = fileURLToPath(new URL("../", import.meta.url));
+const root = fileURLToPath(new URL("../../", import.meta.url));
 
 rmSync(cli + "dist", { recursive: true, force: true });
 rmSync(cli + "viewer", { recursive: true, force: true });

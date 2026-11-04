@@ -26,7 +26,12 @@ export async function serve(viewerDir: string, fileName: string, json: string, p
   const root = normalize(viewerDir + sep);
 
   const server = createServer(async (req, res) => {
-    const path = decodeURIComponent(new URL(req.url ?? "/", "http://x").pathname);
+    let path: string;
+    try {
+      path = decodeURIComponent(new URL(req.url ?? "/", "http://x").pathname);
+    } catch {
+      return send(res, 400, ".txt", "bad request");
+    }
     if (path === "/data/index.json") return send(res, 200, ".json", index);
     if (path === `/data/${fileName}`) return send(res, 200, ".json", json);
 

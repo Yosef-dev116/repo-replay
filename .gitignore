@@ -6,3 +6,4 @@ cli/dist/
 cli/viewer/
 cli/README.md
 cli/LICENSE
+.candid/

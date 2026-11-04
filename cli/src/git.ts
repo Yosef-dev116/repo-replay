@@ -1,4 +1,4 @@
-import { spawn } from "node:child_process";
+import { execFileSync, spawn } from "node:child_process";
 import { createInterface } from "node:readline";
 import { parseNumstatPath, type PathChange } from "./renames.ts";
 
@@ -16,6 +16,15 @@ export interface Commit {
 }
 
 const MARK = "\u0001C\u0001";
+
+/** True for a clone made with --depth, where git log shows only part of the history. */
+export function isShallow(repoDir: string): boolean {
+  try {
+    return execFileSync("git", ["-C", repoDir, "rev-parse", "--is-shallow-repository"], { encoding: "utf8" }).trim() === "true";
+  } catch {
+    return false; // not a repo: readCommits reports that error
+  }
+}
 
 /**
  * Stream the main-branch history oldest-first.

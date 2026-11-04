@@ -3,7 +3,7 @@ import { basename, dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
 import { buildRepoJson, MAX_MONTHS, type BuildReport } from "./build.ts";
-import { readCommits } from "./git.ts";
+import { isShallow, readCommits } from "./git.ts";
 import { openBrowser, serve } from "./serve.ts";
 
 const USAGE = `usage: repo-replay [path-to-git-repo] [options]
@@ -42,6 +42,12 @@ async function main() {
   }
   const repoDir = resolve(positionals[0] ?? ".");
   const maxMonths = Number(values["max-months"]);
+  if (!Number.isInteger(maxMonths) || maxMonths < 2) throw new Error("--max-months must be a whole number, 2 or more");
+  const port = Number(values.port);
+  if (!Number.isInteger(port) || port < 0 || port > 65535) throw new Error("--port must be a whole number from 0 to 65535");
+  if (isShallow(repoDir)) {
+    console.warn('warning: shallow clone, so the history is cut off. Run "git fetch --unshallow" for the full replay.');
+  }
   const name = values.name ?? basename(repoDir);
 
   const t0 = performance.now();
@@ -68,7 +74,7 @@ async function main() {
   }
 
   const fileName = `${basename(name).replace(/[^\w.-]/g, "_")}.json`;
-  const url = await serve(VIEWER_DIR, fileName, json, Number(values.port));
+  const url = await serve(VIEWER_DIR, fileName, json, port);
   console.log(`\nReplay ready: ${url}`);
   console.log("Press Ctrl+C to stop.");
   if (values.open) openBrowser(url);

@@ -3,7 +3,7 @@ import { readdirSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { defineConfig, type Plugin } from 'vite'
 
-const DATA_DIR = resolve(__dirname, 'public/data')
+const DATA_DIR = resolve(import.meta.dirname, 'public/data')
 
 /** List the repo JSON files in public/data. */
 function listRepos(): string[] {

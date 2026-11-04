@@ -18,6 +18,7 @@ interface Live {
 export const MAX_MONTHS = 120;
 
 const monthOf = (unix: number) => new Date(unix * 1000).toISOString().slice(0, 7);
+const NOW = monthOf(Date.now() / 1000);
 
 function nextMonth(m: string): string {
   let [y, mo] = m.split("-").map(Number);
@@ -31,9 +32,13 @@ export function sampleIndices(n: number, max: number): number[] {
   return [...Array(max).keys()].map((i) => Math.round((i * (n - 1)) / (max - 1)));
 }
 
+// Hidden files stay in the raw snapshot, so toFrames knows their churn
+// when they become visible.
+type RawFile = FileSnap & { hidden: boolean };
+
 interface RawMonth {
   month: string;
-  files: FileSnap[]; // churn is cumulative here
+  files: RawFile[]; // churn is cumulative here
   lines: number;
   commits: number; // commits in this calendar month
   authors: Set<string>; // authors in this calendar month
@@ -53,15 +58,15 @@ export async function buildRepoJson(
   let authorsInMonth = new Set<string>();
 
   const snapshot = (m: string) => {
-    const files: FileSnap[] = [];
+    const files: RawFile[] = [];
     let lines = 0;
     for (const [id, f] of live) {
-      if (isIgnored(f.path)) continue;
+      const hidden = isIgnored(f.path);
       let topAuthor = "";
       let best = -1;
       for (const [a, n] of f.byAuthor) if (n > best) { best = n; topAuthor = a; }
-      files.push({ id, path: f.path, lines: f.lines, churn: f.churn, topAuthor });
-      lines += f.lines;
+      files.push({ id, path: f.path, lines: f.lines, churn: f.churn, topAuthor, hidden });
+      if (!hidden) lines += f.lines;
     }
     raw.push({ month: m, files, lines, commits: commitsInMonth, authors: authorsInMonth });
     commitsInMonth = 0;
@@ -70,7 +75,9 @@ export async function buildRepoJson(
 
   for await (const c of commits) {
     // Author dates are not monotonic on a first-parent walk. Never go back.
-    const cm = monthOf(c.time);
+    // A date in the future is a broken clock: count it in the current month.
+    let cm = monthOf(c.time);
+    if (cm > NOW) cm = month ?? NOW;
     if (month === undefined) month = cm;
     while (cm > month) {
       snapshot(month);
@@ -127,10 +134,10 @@ function toFrames(raw: RawMonth[], maxMonths: number): MonthSnap[] {
     }
     from = k + 1;
     const r = raw[k];
-    const files = r.files.map((f) => {
+    const files = r.files.flatMap(({ hidden, ...f }) => {
       const churn = f.churn - (prevChurn.get(f.id) ?? 0);
       prevChurn.set(f.id, f.churn);
-      return { ...f, churn };
+      return hidden ? [] : [{ ...f, churn }];
     });
     out.push({
       month: r.month,
