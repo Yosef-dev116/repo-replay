@@ -15,8 +15,8 @@ function listRepos(): string[] {
 }
 
 /**
- * A static site cannot list a folder, so serve /data/index.json from the
- * file system in dev, and write it into the bundle at build time.
+ * A static site cannot list a folder. So in dev, serve /data/index.json from
+ * the file system. At build time, write it into the bundle.
  */
 function dataIndex(): Plugin {
   return {

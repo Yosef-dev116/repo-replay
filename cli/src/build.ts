@@ -23,7 +23,7 @@ export interface RepoJson {
   months: MonthSnap[];
 }
 
-/** Run facts that are printed by the CLI but not written to repo.json. */
+/** Run facts that the CLI prints but does not write to the JSON. */
 export interface BuildReport {
   unknownRenames: number; // renames whose oldPath had no id
 }
@@ -131,7 +131,7 @@ export async function buildRepoJson(
 /**
  * Keep at most `maxMonths` frames, evenly spread. Each kept frame reports
  * churn, commits and authors for the whole period since the previous kept
- * frame, so skipped months are folded in and nothing is lost.
+ * frame, so the skipped months still count.
  */
 function toFrames(raw: RawMonth[], maxMonths: number): MonthSnap[] {
   const keep = sampleIndices(raw.length, maxMonths);

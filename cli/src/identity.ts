@@ -14,7 +14,7 @@
  * gets a new id. The treemap uses the id as the D3 join key, so a reused id
  * would make a dead tile come back to life in the wrong place.
  *
- * Edge cases (decided by the user):
+ * Edge cases:
  *   - rename whose oldPath is not in map: treat it as an add with a new id.
  *     The caller counts these cases.
  *   - rename onto a path that already has an id: the moved id wins, and the

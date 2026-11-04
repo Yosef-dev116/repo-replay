@@ -7,7 +7,7 @@ Each tile is one file. Its area is the file's line count, and its color is how m
 file changed in that period. Files keep their tile when they are renamed or moved, so you
 can follow one file across years of history.
 
-**[Live demo](https://yosef-dev116.github.io/repo-replay/?repo=vue.json)**: pick Vue, zod or htmx and press play.
+[Live demo](https://yosef-dev116.github.io/repo-replay/?repo=vue.json): pick Vue, zod or htmx and press play.
 
 ![Vue's history from 2018 to 2026, one frame per month](https://raw.githubusercontent.com/Yosef-dev116/repo-replay/main/docs/vue-replay.gif)
 
@@ -23,7 +23,7 @@ npx repo-replay
 
 It reads the history, starts a viewer on your own machine, and opens it in your browser.
 Your code and history never leave your computer, so it is safe for private repos.
-A repo with years of history takes a few seconds, because it reads `git log` only.
+It reads `git log` only, so it is fast. Vue's 8 years of history take about 3 seconds.
 
 | Option | Meaning |
 |---|---|
@@ -55,12 +55,13 @@ git log --numstat ──► cli/ ──► one JSON file per repo ──► web/
    gets a new id. `cli/src/renames.ts` parses git's brace rename syntax, such as
    `src/{old => new}/a.ts`.
 3. **Take snapshots.** `cli/src/build.ts` records every live file at the end of each
-   month. A repo with more than 120 months is sampled down to 120 frames. A skipped
-   month's churn, commits and authors are added to the next frame, so nothing is lost.
+   month. It samples a repo with more than 120 months down to 120 frames. It adds the
+   churn, commits and authors of each skipped month to the next frame, so the totals
+   stay correct.
 4. **Hide noise.** `cli/src/ignore.ts` hides lockfiles, `node_modules`, `vendor`, `dist`,
    `build`, minified files, version-numbered release copies, and secret-like files such
-   as `.env`. Without this, `package-lock.json` was 77% of htmx's first frame. Hidden files
-   are still tracked, so a file that moves out of a hidden folder keeps its history.
+   as `.env`. Without this filter, `package-lock.json` is 77% of htmx's first frame. The CLI
+   still tracks hidden files, so a file that moves out of a hidden folder keeps its history.
 5. **Draw.** `web/src/Treemap.tsx` lays out files with a binary treemap grouped by
    folder. A keyed D3 join uses the file id, so tiles animate between months. Color uses
    a log scale of churn. Grey means no change in that period.
@@ -92,8 +93,8 @@ To host the viewer under a sub-path, such as GitHub Pages, build with
 
 - The noise filter does not catch third-party libraries copied into ordinary folders.
   For example, htmx has large vendored files under `test/lib/` and `test/ws-sse/static/`.
-- History follows the first-parent line, so work on merged branches is counted on the
-  month of its merge commit.
+- History follows the first-parent line, so the CLI counts work on a merged branch in
+  the month of its merge commit.
 - Size grows with files × months. The demos are 155–658 KB gzipped. A large monorepo
   needs a more compact data format.
 

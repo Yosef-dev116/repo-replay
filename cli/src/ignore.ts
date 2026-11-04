@@ -1,9 +1,9 @@
 /**
  * Decide if a file is hidden from the treemap.
  *
- * The file is still tracked (identity, renames, line counts). It is only
- * left out of each month's snapshot. So a file moved out of an ignored
- * folder keeps its id and its history.
+ * The CLI still tracks the file (identity, renames, line counts). It only
+ * leaves the file out of each month's snapshot. So a file moved out of an
+ * ignored folder keeps its id and its history.
  *
  * `path` is repo-relative with forward slashes, e.g. "src/htmx.js".
  */

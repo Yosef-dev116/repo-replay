@@ -52,7 +52,7 @@ function send(res: import("node:http").ServerResponse, status: number, ext: stri
   res.end(body);
 }
 
-/** Open a URL in the default browser. Failure is fine: the URL is printed too. */
+/** Open a URL in the default browser. If this fails, the user still has the printed URL. */
 export function openBrowser(url: string) {
   const [cmd, args] =
     process.platform === "darwin" ? ["open", [url]]
