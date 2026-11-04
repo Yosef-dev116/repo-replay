@@ -2,4 +2,3 @@ node_modules/
 .demo-repos/
 dist/
 .DS_Store
-web/public/data/

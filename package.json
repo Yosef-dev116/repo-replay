@@ -1,5 +1,13 @@
 {
   "name": "repo-replay",
   "private": true,
-  "workspaces": ["cli", "web"]
+  "workspaces": ["cli", "web"],
+  "scripts": {
+    "dev": "npm run dev -w web",
+    "build": "npm run build -w web",
+    "test": "npm test -w cli",
+    "lint": "npm run typecheck -w cli && npm run lint -w web",
+    "extract": "tsx cli/src/index.ts",
+    "demo-data": "scripts/demo-data.sh"
+  }
 }
