@@ -94,3 +94,7 @@ To host the viewer under a sub-path, such as GitHub Pages, build with
   month of its merge commit.
 - Size grows with files × months. The demos are 155–372 KB gzipped. A large monorepo
   needs a more compact data format.
+
+## License
+
+MIT. See [LICENSE](LICENSE).
