@@ -11,6 +11,8 @@ export default function FpsMeter() {
     let start = performance.now()
     let raf = 0
     const tick = (now: number) => {
+      // `frames` is local to this effect, not render state. The rule misreads it.
+      // oxlint-disable-next-line react/immutability
       frames++
       if (now - start >= 1000) {
         const value = Math.round((frames * 1000) / (now - start))
