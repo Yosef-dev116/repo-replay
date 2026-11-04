@@ -40,7 +40,7 @@ export default function App() {
   const [speed, setSpeed] = useState<(typeof SPEEDS)[number]>(1)
 
   useEffect(() => {
-    fetch('/data/index.json')
+    fetch(`${import.meta.env.BASE_URL}data/index.json`)
       .then((r) => r.json() as Promise<string[]>)
       .then((list) => {
         setRepos(list)
@@ -53,14 +53,16 @@ export default function App() {
   useEffect(() => {
     if (!file) return
     let live = true
-    fetch(`/data/${file}`)
+    fetch(`${import.meta.env.BASE_URL}data/${file}`)
       .then((r) => r.json() as Promise<RepoJson>)
       .then((d) => {
         if (!live) return
-        setData(d)
-        setIndex(0)
-        setError('')
         const q = new URLSearchParams(location.search)
+        // ?month=2024-06 opens at that month, so a link can point at a moment.
+        const start = d.months.findIndex((m) => m.month === q.get('month'))
+        setData(d)
+        setIndex(Math.max(0, start))
+        setError('')
         q.set('repo', file)
         history.replaceState(null, '', `?${q}`)
       })
