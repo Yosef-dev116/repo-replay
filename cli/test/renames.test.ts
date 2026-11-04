@@ -42,3 +42,18 @@ describe("parseNumstatPath", () => {
     });
   });
 });
+
+import { sampleIndices } from "../src/build.ts";
+
+describe("sampleIndices", () => {
+  it("keeps everything when under the cap", () => {
+    expect(sampleIndices(3, 120)).toEqual([0, 1, 2]);
+  });
+  it("spreads evenly and keeps first and last", () => {
+    const k = sampleIndices(300, 120);
+    expect(k).toHaveLength(120);
+    expect(k[0]).toBe(0);
+    expect(k.at(-1)).toBe(299);
+    expect(new Set(k).size).toBe(120);
+  });
+});
