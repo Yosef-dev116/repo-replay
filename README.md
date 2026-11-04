@@ -7,9 +7,11 @@ Each tile is one file. Its area is the file's line count, and its color is how m
 file changed in that period. Files keep their tile when they are renamed or moved, so you
 can follow one file across years of history.
 
-**[Live demo](https://yosef-dev116.github.io/repo-replay/)**: pick zod or htmx and press play.
+**[Live demo](https://yosef-dev116.github.io/repo-replay/?repo=vue.json)**: pick Vue, zod or htmx and press play.
 
-![zod in June 2025: the v4 rewrite in packages/zod/src/v4 is red with churn, while v3 is grey](docs/zod.png)
+![Vue's history from 2018 to 2026, one frame per month](docs/vue-replay.gif)
+
+*Vue (`vuejs/core`), 2018–2026. Red tiles changed a lot that month. Grey tiles did not change.*
 
 ## Quick start
 
@@ -20,8 +22,8 @@ npm install
 npm run dev
 ```
 
-Open http://localhost:5173. The repo includes data for two demo repos,
-[zod](https://github.com/colinhacks/zod) and [htmx](https://github.com/bigskysoftware/htmx).
+Open http://localhost:5173. The repo includes data for three demo repos,
+[Vue](https://github.com/vuejs/core), [zod](https://github.com/colinhacks/zod) and [htmx](https://github.com/bigskysoftware/htmx).
 Pick one and press play.
 
 ## Replay your own repo
@@ -80,7 +82,7 @@ npm run build       # production build into web/dist
 npm run demo-data   # rebuild the demo JSON from pinned commits
 ```
 
-`npm run demo-data` clones zod and htmx into `.demo-repos/` at the commits pinned in
+`npm run demo-data` clones Vue, zod and htmx into `.demo-repos/` at the commits pinned in
 `scripts/demo-data.sh`. It produces the same files that are committed.
 
 To host the viewer under a sub-path, such as GitHub Pages, build with
@@ -92,7 +94,7 @@ To host the viewer under a sub-path, such as GitHub Pages, build with
   For example, htmx has large vendored files under `test/lib/` and `test/ws-sse/static/`.
 - History follows the first-parent line, so work on merged branches is counted on the
   month of its merge commit.
-- Size grows with files × months. The demos are 155–372 KB gzipped. A large monorepo
+- Size grows with files × months. The demos are 155–658 KB gzipped. A large monorepo
   needs a more compact data format.
 
 ## License

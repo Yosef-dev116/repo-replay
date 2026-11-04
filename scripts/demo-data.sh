@@ -8,6 +8,7 @@ cd "$(dirname "$0")/.."
 DEMOS=(
   "zod  colinhacks/zod         77e72ec2"
   "htmx bigskysoftware/htmx    fa978b24"
+  "vue  vuejs/core             70599b52"
 )
 
 mkdir -p .demo-repos
@@ -15,7 +16,8 @@ for row in "${DEMOS[@]}"; do
   read -r name slug commit <<<"$row"
   dir=".demo-repos/$name"
   if [ ! -d "$dir/.git" ]; then
-    git clone --quiet --filter=blob:none "https://github.com/$slug.git" "$dir"
+    # A full clone: --numstat needs file contents, so a blobless clone is slow.
+    git clone --quiet --no-checkout "https://github.com/$slug.git" "$dir"
   fi
   git -C "$dir" fetch --quiet origin
   git -C "$dir" checkout --quiet --detach "$commit"
