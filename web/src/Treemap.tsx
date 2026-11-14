@@ -1,6 +1,7 @@
 import * as d3 from 'd3'
 import { useEffect, useRef, useState } from 'react'
 import type { FileSnap, MonthSnap } from '../../cli/src/types.ts'
+import { visibleFiles } from './files'
 
 interface Props {
   month: MonthSnap
@@ -19,8 +20,15 @@ const LABEL_H = 16
 
 const stratify = d3.stratify<FileSnap>().path((d) => '/' + d.path)
 
-function layout(files: FileSnap[], width: number, height: number): Node {
-  const root = stratify(files.filter((f) => f.lines > 0)).sum((d) => d?.lines ?? 0)
+/**
+ * Returns undefined when nothing is visible: stratify throws "no root" on an
+ * empty list, and a month can have only a lockfile or only images.
+ * With one file, stratify makes that file the root, so the root can be a leaf.
+ */
+function layout(files: FileSnap[], width: number, height: number): Node | undefined {
+  const visible = visibleFiles(files)
+  if (visible.length === 0) return undefined
+  const root = stratify(visible).sum((d) => d?.lines ?? 0)
   const total = root.value || 1
   // Sort siblings by path, not by value. Then a file keeps its place in the
   // order when its size changes, and treemapBinary keeps it in roughly the
@@ -67,9 +75,9 @@ export default function Treemap({ month, color, duration }: Props) {
     const t = d3.transition().duration(resized ? 0 : duration).ease(d3.easeCubicInOut)
 
     const root = layout(month.files, width, height)
-    const folders = root.descendants().filter((n) => n.children && n.depth > 0)
-    const leaves = root.leaves()
-    const total = root.value || 1
+    const folders = root ? root.descendants().filter((n) => n.children && n.depth > 0) : []
+    const leaves = root ? root.leaves() : []
+    const total = root?.value || 1
 
     const sel = d3.select(svg)
     const place = (s: RectTransition) =>

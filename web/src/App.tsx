@@ -1,6 +1,7 @@
 import * as d3 from 'd3'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import Treemap from './Treemap'
+import { visibleFiles } from './files'
 import type { RepoJson } from '../../cli/src/types.ts'
 
 const SPEEDS = [0.5, 1, 2] as const
@@ -140,6 +141,9 @@ export default function App() {
         {error && <p className="message">{error}</p>}
         {!error && !month && <p className="message">Loading…</p>}
         {month && <Treemap month={month} color={color} duration={duration} />}
+        {month && visibleFiles(month.files).length === 0 && (
+          <p className="message overlay">No files to show this month. Lockfiles, build output, and binary files are hidden.</p>
+        )}
       </main>
 
       {data && month && (
