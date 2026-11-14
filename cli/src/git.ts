@@ -20,7 +20,10 @@ const MARK = "\u0001C\u0001";
 /** True for a clone made with --depth, where git log shows only part of the history. */
 export function isShallow(repoDir: string): boolean {
   try {
-    return execFileSync("git", ["-C", repoDir, "rev-parse", "--is-shallow-repository"], { encoding: "utf8" }).trim() === "true";
+    return execFileSync("git", ["-C", repoDir, "rev-parse", "--is-shallow-repository"], {
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "pipe"],
+    }).trim() === "true";
   } catch {
     return false; // not a repo: readCommits reports that error
   }

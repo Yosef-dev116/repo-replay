@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
 import { buildRepoJson, MAX_MONTHS, type BuildReport } from "./build.ts";
 import { isShallow, readCommits } from "./git.ts";
+import { checkRepo, UserError } from "./preflight.ts";
 import { openBrowser, serve } from "./serve.ts";
 
 const USAGE = `usage: repo-replay [path-to-git-repo] [options]
@@ -23,28 +24,44 @@ options:
 // When run from source, src/index.ts sits at the same depth, so the same path works.
 const VIEWER_DIR = fileURLToPath(new URL("../viewer/", import.meta.url));
 
+function parseCli() {
+  try {
+    return parseArgs({
+      allowPositionals: true,
+      allowNegative: true,
+      options: {
+        out: { type: "string", short: "o" },
+        name: { type: "string" },
+        "max-months": { type: "string", default: String(MAX_MONTHS) },
+        port: { type: "string", default: "0" },
+        open: { type: "boolean", default: true },
+        help: { type: "boolean", short: "h" },
+      },
+    });
+  } catch (err) {
+    // node:util parseArgs errors carry a code like ERR_PARSE_ARGS_UNKNOWN_OPTION.
+    if ((err as NodeJS.ErrnoException).code?.startsWith("ERR_PARSE_ARGS")) {
+      throw new UserError(`${(err as Error).message}\nRun "repo-replay --help" to see the options.`);
+    }
+    throw err;
+  }
+}
+
 async function main() {
-  const { values, positionals } = parseArgs({
-    allowPositionals: true,
-    allowNegative: true,
-    options: {
-      out: { type: "string", short: "o" },
-      name: { type: "string" },
-      "max-months": { type: "string", default: String(MAX_MONTHS) },
-      port: { type: "string", default: "0" },
-      open: { type: "boolean", default: true },
-      help: { type: "boolean", short: "h" },
-    },
-  });
+  const { values, positionals } = parseCli();
   if (values.help) {
     console.log(USAGE);
     return;
   }
+  if (positionals.length > 1) {
+    throw new UserError(`expected one repo path, got ${positionals.length}: ${positionals.join(" ")}\nRun "repo-replay --help" for usage.`);
+  }
   const repoDir = resolve(positionals[0] ?? ".");
   const maxMonths = Number(values["max-months"]);
-  if (!Number.isInteger(maxMonths) || maxMonths < 2) throw new Error("--max-months must be a whole number, 2 or more");
+  if (!Number.isInteger(maxMonths) || maxMonths < 2) throw new UserError("--max-months must be a whole number, 2 or more");
   const port = Number(values.port);
-  if (!Number.isInteger(port) || port < 0 || port > 65535) throw new Error("--port must be a whole number from 0 to 65535");
+  if (!Number.isInteger(port) || port < 0 || port > 65535) throw new UserError("--port must be a whole number from 0 to 65535");
+  checkRepo(repoDir);
   if (isShallow(repoDir)) {
     console.warn('warning: shallow clone, so the history is cut off. Run "git fetch --unshallow" for the full replay.');
   }
@@ -81,6 +98,10 @@ async function main() {
 }
 
 main().catch((err) => {
-  console.error(err instanceof Error ? err.message : err);
+  const msg = err instanceof Error ? err.message : String(err);
+  console.error(`repo-replay: ${msg}`);
+  if (!(err instanceof UserError)) {
+    console.error("This looks like a bug. Please report it: https://github.com/Yosef-dev116/repo-replay/issues");
+  }
   process.exit(1);
 });
