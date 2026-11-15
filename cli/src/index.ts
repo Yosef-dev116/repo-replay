@@ -3,8 +3,10 @@ import { basename, dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
 import { buildRepoJson, MAX_MONTHS, type BuildReport } from "./build.ts";
+import type { RepoJson } from "./types.ts";
 import { isShallow, readCommits } from "./git.ts";
 import { checkRepo, UserError } from "./preflight.ts";
+import { sizeWarning, withProgress } from "./progress.ts";
 import { openBrowser, serve } from "./serve.ts";
 
 const USAGE = `usage: repo-replay [path-to-git-repo] [options]
@@ -69,9 +71,13 @@ async function main() {
 
   const t0 = performance.now();
   const report: BuildReport = { unknownRenames: 0 };
-  const data = await buildRepoJson(name, readCommits(repoDir), maxMonths, report);
+  // Progress goes to stderr, and only on a terminal, so piped output and CI logs stay clean.
+  const progress = process.stderr.isTTY
+    ? (n: number, done: boolean) => process.stderr.write(done ? "\r\x1b[K" : `\rreading history: ${n.toLocaleString("en-US")} commits`)
+    : () => {};
+  const data = await buildRepoJson(name, withProgress(readCommits(repoDir), progress), maxMonths, report);
   if (data.months.length === 0) throw new Error(`no commits found in ${repoDir}`);
-  const json = JSON.stringify(data);
+  const json = toJson(data);
   const secs = ((performance.now() - t0) / 1000).toFixed(2);
 
   const last = data.months.at(-1);
@@ -82,11 +88,14 @@ async function main() {
   console.log(`renames from unknown path: ${report.unknownRenames}`);
   console.log(`time:        ${secs}s`);
 
+  const warning = sizeWarning(Buffer.byteLength(json), data.months.length);
+  if (warning) console.warn(warning);
+
   if (values.out) {
     const out = resolve(values.out);
     await mkdir(dirname(out), { recursive: true });
     await writeFile(out, json);
-    console.log(`output:      ${out} (${(json.length / 1e6).toFixed(1)} MB)`);
+    console.log(`output:      ${out} (${(Buffer.byteLength(json) / 1e6).toFixed(1)} MB)`);
     return;
   }
 
@@ -95,6 +104,17 @@ async function main() {
   console.log(`\nReplay ready: ${url}`);
   console.log("Press Ctrl+C to stop.");
   if (values.open) openBrowser(url);
+}
+
+/** JSON.stringify, with a clear error when the data passes V8's string size limit (about 512 MB). */
+function toJson(data: RepoJson): string {
+  try {
+    return JSON.stringify(data);
+  } catch (err) {
+    if (!(err instanceof RangeError)) throw err;
+    const frames = data.months.length;
+    throw new UserError(`this repo's replay is too big to build (over 500 MB of data with ${frames} frames). Use --max-months ${Math.max(2, Math.floor(frames / 4))} or lower.`);
+  }
 }
 
 main().catch((err) => {

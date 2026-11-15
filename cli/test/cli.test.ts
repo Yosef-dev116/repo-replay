@@ -55,6 +55,8 @@ describe("CLI on a repo with one commit", () => {
     const out = join(tmp, "out", "one.json");
     const r = run([join(tmp, "one"), "-o", out]);
     expect(r.status).toBe(0);
+    // Not a terminal: no progress line, and a small file gets no size warning.
+    expect(r.stderr).toBe("");
     const data = JSON.parse(readFileSync(out, "utf8"));
     expect(data.months).toHaveLength(1);
     expect(data.months[0].files).toEqual([expect.objectContaining({ path: "a.txt", lines: 2 })]);

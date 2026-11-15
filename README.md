@@ -76,6 +76,7 @@ npm test            # CLI unit tests (Vitest)
 npm run lint        # CLI typecheck + web lint
 npm run build       # production build into web/dist
 npm run demo-data   # rebuild the demo JSON from pinned commits
+node scripts/gen-big-repo.mjs /tmp/big 100000 30000   # a large synthetic repo for scale tests
 npm run extract -- path/to/repo -o web/public/data/my-repo.json   # add a repo to the dev viewer
 ```
 
@@ -94,8 +95,10 @@ To host the viewer under a sub-path, such as GitHub Pages, build with
   For example, htmx has large vendored files under `test/lib/` and `test/ws-sse/static/`.
 - History follows the first-parent line, so the CLI counts work on a merged branch in
   the month of its merge commit.
-- Size grows with files × months. The demos are 155–658 KB gzipped. A large monorepo
-  needs a more compact data format.
+- Size grows with files × months. The demos are 155–658 KB gzipped. A generated repo with
+  100,000 commits and 30,000 files takes about 9 seconds and 1.2 GB of memory and makes a
+  165 MB file. The CLI warns above 50 MB and suggests a `--max-months` value. Above about
+  500 MB it stops and asks for fewer frames. A large monorepo needs a more compact data format.
 
 ## License
 
