@@ -34,6 +34,27 @@ It reads `git log` only, so it is fast. Vue's 8 years of history take about 3 se
 | `--port N` | Port for the viewer. Default: any free port. |
 | `--no-open` | Print the URL, but do not open a browser. |
 
+### When something is wrong
+
+The CLI checks the repo before it reads history. Each problem prints one line that starts
+with `repo-replay:` and exits with code 1:
+
+| Case | Message |
+|---|---|
+| The path does not exist | `folder not found: <path>` |
+| The path is a file | `not a folder: <path>` |
+| The folder is not a git repo | `not a git repository: <path>` |
+| The repo has no commits | `no commits yet in <path>` |
+| git is not installed | `git is not installed or not on your PATH` |
+| More than one path, or an unknown option | the problem, and a pointer to `--help` |
+| A bad `--max-months` or `--port` value | the allowed range |
+| The `-o` path is a folder or cannot be written | `-o <path> is a folder`, or why it cannot be written |
+| The `--port` is taken | `port N is already in use` |
+| The replay data would pass about 500 MB | a `--max-months` value to try |
+
+A repo with one commit gives a one-frame replay. A shallow clone works, but the CLI warns
+that the history is cut off. Any other error also asks you to report a bug.
+
 ## Viewer links
 
 | URL parameter | Effect |

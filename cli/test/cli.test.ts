@@ -1,6 +1,7 @@
 import { execFileSync, spawnSync } from "node:child_process";
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
+import { createServer, type AddressInfo } from "node:net";
 import { join } from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
@@ -47,6 +48,18 @@ describe("CLI error messages", () => {
   it("reports an unknown option and points to --help", () => fails(["--bogus"], /Unknown option '--bogus'[\s\S]*--help/));
   it("reports a bad --max-months", () => fails([join(tmp, "one"), "--max-months", "1"], /--max-months must be/));
   it("reports a bad --port", () => fails([join(tmp, "one"), "--port", "70000"], /--port must be/));
+  it("reports an -o path that is a folder", () => fails([join(tmp, "one"), "-o", tmp], /-o .* is a folder/));
+  it("reports an -o path under a file", () => fails([join(tmp, "one"), "-o", join(tmp, "a-file", "x.json")], /part of that path is a file/));
+  it("reports a --port that is in use", async () => {
+    const server = createServer();
+    await new Promise<void>((ok) => server.listen(0, "127.0.0.1", ok));
+    const { port } = server.address() as AddressInfo;
+    try {
+      fails([join(tmp, "one"), "--port", String(port), "--no-open"], new RegExp(`port ${port} is already in use`));
+    } finally {
+      server.close();
+    }
+  });
   it("reports missing git", () => fails([join(tmp, "one")], /git is not installed/, { ...process.env, PATH: "/nonexistent" }));
 });
 

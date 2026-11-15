@@ -1,5 +1,6 @@
-import { mkdir, writeFile } from "node:fs/promises";
-import { basename, dirname, resolve } from "node:path";
+import { mkdir, stat, writeFile } from "node:fs/promises";
+import { createServer } from "node:net";
+import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
 import { buildRepoJson, MAX_MONTHS, type BuildReport } from "./build.ts";
@@ -64,6 +65,10 @@ async function main() {
   const port = Number(values.port);
   if (!Number.isInteger(port) || port < 0 || port > 65535) throw new UserError("--port must be a whole number from 0 to 65535");
   checkRepo(repoDir);
+  // Check the output and the port before reading history, which can take a while on a big repo.
+  const out = values.out ? resolve(values.out) : undefined;
+  if (out) await prepareOut(out);
+  else if (port !== 0) await checkPort(port);
   if (isShallow(repoDir)) {
     console.warn('warning: shallow clone, so the history is cut off. Run "git fetch --unshallow" for the full replay.');
   }
@@ -91,19 +96,49 @@ async function main() {
   const warning = sizeWarning(Buffer.byteLength(json), data.months.length);
   if (warning) console.warn(warning);
 
-  if (values.out) {
-    const out = resolve(values.out);
-    await mkdir(dirname(out), { recursive: true });
-    await writeFile(out, json);
+  if (out) {
+    await writeFile(out, json).catch((err) => outError(out, err));
     console.log(`output:      ${out} (${(Buffer.byteLength(json) / 1e6).toFixed(1)} MB)`);
     return;
   }
 
   const fileName = `${basename(name).replace(/[^\w.-]/g, "_")}.json`;
-  const url = await serve(VIEWER_DIR, fileName, json, port);
+  const url = await serve(VIEWER_DIR, fileName, json, port).catch((err) => portError(port, err));
   console.log(`\nReplay ready: ${url}`);
   console.log("Press Ctrl+C to stop.");
   if (values.open) openBrowser(url);
+}
+
+/** Make the output's folder and check that the output path is not a folder. */
+async function prepareOut(out: string): Promise<void> {
+  await mkdir(dirname(out), { recursive: true }).catch((err) => outError(out, err));
+  const st = await stat(out).catch(() => undefined);
+  if (st?.isDirectory()) throw new UserError(`-o ${out} is a folder. Pass a file name, such as ${join(out, "replay.json")}.`);
+}
+
+function outError(out: string, err: unknown): never {
+  const code = (err as NodeJS.ErrnoException).code;
+  if (code === "EACCES" || code === "EPERM" || code === "EROFS") throw new UserError(`cannot write ${out}: permission denied. Pick another -o path.`);
+  if (code === "ENOTDIR" || code === "EEXIST") throw new UserError(`cannot write ${out}: part of that path is a file, not a folder. Pick another -o path.`);
+  if (code === "EISDIR") throw new UserError(`-o ${out} is a folder. Pass a file name, such as ${join(out, "replay.json")}.`);
+  throw err;
+}
+
+/** Fail early when a fixed --port is taken, instead of after reading the whole history. */
+async function checkPort(port: number): Promise<void> {
+  const server = createServer();
+  await new Promise<void>((ok, fail) => {
+    server.once("error", fail);
+    server.listen(port, "127.0.0.1", ok);
+  }).catch((err) => portError(port, err));
+  await new Promise((done) => server.close(done));
+}
+
+function portError(port: number, err: unknown): never {
+  const code = (err as NodeJS.ErrnoException).code;
+  if (code === "EADDRINUSE") throw new UserError(`port ${port} is already in use. Pick another --port, or leave it out to use any free port.`);
+  if (code === "EACCES") throw new UserError(`no permission to use port ${port}. Use a port above 1023, or leave --port out.`);
+  throw err;
 }
 
 /** JSON.stringify, with a clear error when the data passes V8's string size limit (about 512 MB). */
